@@ -21,48 +21,62 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Gradient Background */
+    /* Gradient Background - Subtle */
     .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
     }
     
-    /* Colorful Headers */
+    /* Colorful Headers - High Contrast */
     h1 {
-        color: #FF6B6B;
+        color: #D63031;  /* Stronger Red/Pink */
         font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
         text-align: center;
-        text-shadow: 2px 2px 4px #00000020;
+        text-shadow: 1px 1px 2px #00000010;
     }
     h2, h3 {
-        color: #4ECDC4;
+        color: #009432;  /* Deep Emerald Green or Teal */
         font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        font-weight: 600;
     }
     
-    /* Fun Buttons */
+    /* Fun Buttons - High Contrast */
     .stButton>button {
-        background-color: #FF6B6B;
-        color: white;
+        background-color: #FF7675;
+        color: white !important;
         border-radius: 20px;
-        border: 2px solid #FF6B6B;
+        border: 2px solid #D63031;
         font-weight: bold;
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
-        background-color: #FF8787;
-        border-color: #FF8787;
+        background-color: #D63031;
+        border-color: #D63031;
         transform: scale(1.05);
     }
     
-    /* Custom Metric Cards */
+    /* Custom Metric Cards - High Contrast */
     div[data-testid="stMetricValue"] {
-        color: #1A535C;
-        font-weight: bold;
+        color: #2d3436; /* Dark Charcoal */
+        font-weight: 800;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #636e72; /* Dark Grey */
+        font-weight: 600;
     }
     
     /* Sidebar Styling */
     section[data-testid="stSidebar"] {
-        background-color: #FFE66D;
-        background-image: linear-gradient(315deg, #FFE66D 0%, #FF6B6B 74%);
+        background-color: #f1c40f;
+        background-image: linear-gradient(315deg, #f1c40f 0%, #e67e22 74%);
+    }
+    /* Sidebar Text */
+    section[data-testid="stSidebar"] h1, 
+    section[data-testid="stSidebar"] h2, 
+    section[data-testid="stSidebar"] h3, 
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] span {
+        color: #2d3436 !important;
+        text-shadow: none;
     }
     </style>
     """,
