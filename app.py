@@ -18,6 +18,7 @@ st.set_page_config(
 )
 
 # --- Custom CSS for "Playful" Theme ---
+# --- Custom CSS for "Playful" Theme ---
 st.markdown(
     """
     <style>
@@ -25,58 +26,74 @@ st.markdown(
     .stApp {
         background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
     }
-    
+
+    /* FORCE ALL TEXT TO BE DARK (Fixes issue where dark mode makes text white on light background) */
+    .stApp, .stApp p, .stApp div, .stApp span, .stApp label, .stApp li {
+        color: #000000 !important;
+    }
+
     /* Colorful Headers - High Contrast */
     h1 {
-        color: #D63031;  /* Stronger Red/Pink */
+        color: #c0392b !important;  /* Strong Red */
         font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
         text-align: center;
-        text-shadow: 1px 1px 2px #00000010;
+        text-shadow: 1px 1px 2px #00000020;
     }
     h2, h3 {
-        color: #009432;  /* Deep Emerald Green or Teal */
+        color: #27ae60 !important;  /* Strong Green */
         font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
-        font-weight: 600;
+        font-weight: 700;
     }
-    
+
     /* Fun Buttons - High Contrast */
     .stButton>button {
-        background-color: #FF7675;
+        background-color: #e74c3c !important;
         color: white !important;
         border-radius: 20px;
-        border: 2px solid #D63031;
+        border: 2px solid #c0392b !important;
         font-weight: bold;
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
-        background-color: #D63031;
-        border-color: #D63031;
+        background-color: #c0392b !important;
+        border-color: #c0392b !important;
         transform: scale(1.05);
     }
-    
-    /* Custom Metric Cards - High Contrast */
+    /* Fix hover text color on buttons if needed */
+    .stButton>button:hover p {
+        color: white !important;
+    }
+
+    /* Custom Metric Cards */
     div[data-testid="stMetricValue"] {
-        color: #2d3436; /* Dark Charcoal */
+        color: #2c3e50 !important; /* Dark Blue-Grey */
         font-weight: 800;
     }
     div[data-testid="stMetricLabel"] {
-        color: #636e72; /* Dark Grey */
+        color: #34495e !important;
         font-weight: 600;
     }
-    
+
     /* Sidebar Styling */
     section[data-testid="stSidebar"] {
-        background-color: #f1c40f;
-        background-image: linear-gradient(315deg, #f1c40f 0%, #e67e22 74%);
+        background-color: #f39c12;
+        background-image: linear-gradient(315deg, #f39c12 0%, #d35400 74%);
     }
-    /* Sidebar Text */
+    /* Sidebar Text - Force Dark */
     section[data-testid="stSidebar"] h1, 
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3, 
     section[data-testid="stSidebar"] p, 
-    section[data-testid="stSidebar"] span {
-        color: #2d3436 !important;
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] div,
+    section[data-testid="stSidebar"] label {
+        color: #2c3e50 !important;
         text-shadow: none;
+    }
+    
+    /* Input fields text color */
+    input {
+        color: black !important;
     }
     </style>
     """,
