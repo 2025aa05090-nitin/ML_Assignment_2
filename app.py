@@ -176,9 +176,15 @@ with col_left:
         y=class_names,
         color_continuous_scale="Viridis",
         aspect="auto",
-        height=350, # Fixed height to fit screen
+        height=300, # Reduced height
     )
-    fig_cm.update_layout(margin=dict(l=0, r=0, t=20, b=0))
+    fig_cm.update_layout(
+        margin=dict(l=0, r=0, t=30, b=0),
+        template="plotly_white", # Force light theme
+        font=dict(color="black"), # Force black text
+        paper_bgcolor="rgba(0,0,0,0)", # Transparent background
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
     st.plotly_chart(fig_cm, use_container_width=True)
 
     with st.expander("🏆 Model Comparison"):
@@ -192,7 +198,14 @@ with col_left:
             color_continuous_scale="Plasma",
             height=200
         )
-        fig_comp.update_layout(margin=dict(l=0, r=0, t=30, b=0))
+        fig_comp.update_layout(
+            margin=dict(l=0, r=0, t=30, b=0),
+            template="plotly_white",
+            font=dict(color="black"),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            xaxis=dict(range=[0, 1]), # Fix scale 0-1
+        )
         st.plotly_chart(fig_comp, use_container_width=True)
 
 with col_right:
