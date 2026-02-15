@@ -38,7 +38,7 @@ Dataset: Obesity Risk Classification (Kaggle).
 
 ## Deployment
 The application is deployed on Streamlit Cloud.
-- **App URL**: [Link to your Streamlit App](https://mlassignment2-2025aa05090.streamlit.app/)
+- **App URL**: [Link to Streamlit App](https://mlassignment2-2025aa05090.streamlit.app/)
 - **Features**:
     - **EDA Tab**: Visualizes target distribution and correlations.
     - **Model Comparison**: Interactive leaderboards.
