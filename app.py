@@ -109,6 +109,7 @@ DATA_DIR = Path("data")
 
 # --- Load Utilities ---
 metrics_path = MODEL_DIR / "metrics.json"
+reports_path = MODEL_DIR / "reports.json"
 confusion_path = MODEL_DIR / "confusion_matrices.json"
 label_encoder_path = MODEL_DIR / "label_encoder.pkl"
 
@@ -118,6 +119,9 @@ if not metrics_path.exists():
 
 with open(metrics_path, "r", encoding="utf-8") as f:
     metrics_table = json.load(f)
+
+with open(reports_path, "r", encoding="utf-8") as f:
+    reports_table = json.load(f)
 
 with open(confusion_path, "r", encoding="utf-8") as f:
     confusion_matrices = json.load(f)
@@ -147,8 +151,12 @@ def load_all_models():
 # --- SIDEBAR ---
 with st.sidebar:
     st.title("🎛️ Control Panel")
-    
-    st.markdown("### 📥 Download Test Data")
+
+    st.markdown("### 1. Model Selection")
+    selected_model = st.selectbox("Choose Model", model_names)
+
+    st.markdown("---")
+    st.markdown("### 2. Download Test Data")
     st.markdown("Get standard test data to try predictions:")
     
     # Check if test.csv exists locally for download
@@ -170,16 +178,72 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.info("💡 **Tip:** Go to the 'Predictions' tab to upload this file and see magic happen!")
+    st.info("💡 **Tip:** Go to the 'Live Predictions' tab to upload file!")
 
 
 # --- MAIN LAYOUT ---
 st.markdown("<h1>🥑 Obesity Risk Predictor 🚀</h1>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["📊 EDA & Insights", "🏆 Model Comparison", "🔮 Live Predictions"])
+# Define Tabs - "Model Evaluation" is FIRST as requested
+tab1, tab2, tab3, tab4 = st.tabs(["📝 Model Evaluation", "📊 EDA & Insights", "🏆 Comparison", "🔮 Live Predictions"])
 
-# --- TAB 1: EDA ---
+# --- TAB 1: MODEL EVALUATION (Grading Requirement) ---
 with tab1:
+    st.header(f"Performance: {selected_model}")
+    
+    # 1. Metrics Row
+    metrics = metrics_table[selected_model]
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Accuracy", f"{metrics['accuracy']:.1%}")
+    m2.metric("AUC Score", f"{metrics['auc']:.3f}")
+    m3.metric("F1 Score", f"{metrics['f1']:.3f}")
+    m4.metric("MCC Score", f"{metrics['mcc']:.3f}")
+    
+    st.markdown("---")
+    
+    # 2. Confusion Matrix & Classification Report
+    c1, c2 = st.columns([1, 1])
+    
+    with c1:
+        st.subheader("Confusion Matrix")
+        cm = np.array(confusion_matrices[selected_model])
+        
+        # Load labels
+        class_names = [f"C{i}" for i in range(cm.shape[0])]
+        if label_encoder_path.exists():
+            try:
+                le = joblib.load(label_encoder_path)
+                class_names = [name[:10]+".." if len(name)>10 else name for name in le.classes_.tolist()]
+            except:
+                pass
+
+        fig_cm = px.imshow(
+            cm,
+            text_auto=True,
+            labels=dict(x="Predicted", y="True", color="Count"),
+            x=class_names,
+            y=class_names,
+            color_continuous_scale="Blues",
+            aspect="auto",
+            height=400,
+        )
+        fig_cm.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig_cm, use_container_width=True)
+
+    with c2:
+        st.subheader("Classification Report")
+        if selected_model in reports_table:
+            # Convert JSON report to DataFrame
+            report_data = reports_table[selected_model]
+            # Convert to DF
+            df_rep = pd.DataFrame(report_data).transpose()
+            # Filter support column if needed, or keep all
+            st.dataframe(df_rep.style.format("{:.3f}").background_gradient(cmap="Greens", subset=["f1-score", "precision", "recall"]), height=400, use_container_width=True)
+        else:
+            st.info("Detailed classification report not available.")
+
+# --- TAB 2: EDA ---
+with tab2:
     st.header("Exploratory Data Analysis")
     df = load_data()
     
@@ -187,7 +251,6 @@ with tab1:
         c1, c2 = st.columns(2)
         with c1:
             st.subheader("Target Distribution")
-            # Identify target column (assuming last or specific name)
             target_col = df.columns[-1] 
             fig_target = px.histogram(df, x=target_col, color=target_col, title="Class Imbalance Check")
             fig_target.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
@@ -210,11 +273,10 @@ with tab1:
     else:
         st.warning("Original training data not found for EDA.")
 
-# --- TAB 2: MODEL COMPARISON ---
-with tab2:
-    st.header("Model Performance Overview")
+# --- TAB 3: MODEL COMPARISON ---
+with tab3:
+    st.header("Model Leaderboard")
     
-    # 1. Bar Chart of Accuracies
     accuracies = {model: m['accuracy'] for model, m in metrics_table.items()}
     sorted_acc = dict(sorted(accuracies.items(), key=lambda item: item[1]))
     
@@ -237,13 +299,12 @@ with tab2:
     )
     st.plotly_chart(fig_comp, use_container_width=True)
 
-    # 2. Detailed Metrics Table
-    st.subheader("Detailed Metrics")
+    st.subheader("Detailed Metrics Table")
     metrics_df = pd.DataFrame(metrics_table).T
     st.dataframe(metrics_df.style.format("{:.4f}").background_gradient(cmap="Blues"), use_container_width=True)
 
-# --- TAB 3: LIVE PREDICTIONS ---
-with tab3:
+# --- TAB 4: LIVE PREDICTIONS ---
+with tab4:
     st.header("Multi-Model Prediction Lab 🧪")
     
     uploaded_file = st.file_uploader("📂 Upload CSV File (e.g., test.csv)", type=["csv"])
@@ -272,7 +333,6 @@ with tab3:
             # Load Models
             models = load_all_models()
             
-            # Container for results
             results = {} # Store preds
             model_metrics = [] # Store accuracy/f1 if target exists
             
@@ -291,17 +351,11 @@ with tab3:
                 
                 # Store
                 res_df = input_df.copy()
-                if target_col:
-                    # If target exists, keep it for comparison
-                    pass 
                 res_df["Predicted_Class"] = preds_decoded
                 results[name] = res_df
                 
                 # Calculate Metrics
                 if y_true is not None:
-                    # Need to encode y_true if models predict encoded
-                    # But predictions are now decoded. So verify y_true format.
-                    # Assuming y_true is string class names.
                     acc = accuracy_score(y_true, preds_decoded)
                     f1 = f1_score(y_true, preds_decoded, average="weighted")
                     model_metrics.append({"Model": name, "Test Accuracy": acc, "Test F1": f1})
@@ -312,7 +366,6 @@ with tab3:
                 perf_df = pd.DataFrame(model_metrics).set_index("Model").sort_values("Test Accuracy", ascending=False)
                 st.dataframe(perf_df.style.format("{:.2%}"), use_container_width=True)
                 
-                # Bar chart for uploaded data
                 fig_perf = px.bar(
                     perf_df, x="Test Accuracy", y=perf_df.index, orientation='h',
                     text_auto=".1%", title="Accuracy on NEW Data", color="Test Accuracy", color_continuous_scale="Purples"
@@ -327,17 +380,7 @@ with tab3:
             for tab, (name, res_df) in zip(model_tabs, results.items()):
                 with tab:
                     st.write(f"**Predictions using {name}**")
-                    
-                    def highlight_diff(row):
-                        # Highlight if Prediction != True (only if target exists)
-                        styles = [''] * len(row)
-                        if target_col and target_col in row:
-                            if row[target_col] != row['Predicted_Class']:
-                                return ['background-color: #ffcccc']*len(row)
-                        return styles
-
                     st.dataframe(res_df, use_container_width=True)
-                    
                     csv = res_df.to_csv(index=False)
                     st.download_button(f"📥 Download {name} Results", csv, f"{name}_predictions.csv", "text/csv")
                     
