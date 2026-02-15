@@ -44,3 +44,4 @@ Thumbs.db
 # Data files (keep these for now, but may need to use Git LFS for large files)
 # data/*.data
 model/random_forest.pkl
+logs-*.txt
