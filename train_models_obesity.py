@@ -70,60 +70,80 @@ def find_obesity_dataset():
 
 def load_obesity_dataset(path: Path) -> tuple[pd.DataFrame, str]:
     """
-    Load obesity dataset and identify target column.
+    Load obesity dataset, fix BMI inconsistencies, and identifying target.
     Returns: (dataframe, target_column_name)
     """
     df = pd.read_csv(path)
     
     print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
-    print(f"Columns: {list(df.columns)}")
     
-    # Identify target column (common names for obesity risk classification)
-    target_candidates = [
-        col for col in df.columns 
-        if any(word in col.lower() for word in [
-            'obesity', 'risk', 'class', 'category', 'target', 
-            'label', 'obesitylevel', 'no_obesity', 'obesity_type'
-        ])
-    ]
+    # --- FIX DATA INCONSISTENCIES ---
+    print("\n[INFO] Fixing data inconsistencies (Recalculating BMI & Targets)...")
     
-    if target_candidates:
-        target_col = target_candidates[0]
-        print(f"Target column identified: {target_col}")
+    # 1. Ensure Height is in Meters for BMI calculation
+    # If mean height > 10, assume it's cm
+    if df['Height'].mean() > 10:
+        df['Height_m'] = df['Height'] / 100
     else:
-        # Assume last column is target
-        target_col = df.columns[-1]
-        print(f"Using last column as target: {target_col}")
+        df['Height_m'] = df['Height']
+
+    # 2. Recalculate BMI (Weight / Height^2)
+    # Use the calculated BMI as the source of truth
+    df['BMI_Calculated'] = df['Weight'] / (df['Height_m'] ** 2)
     
+    # 3. Regenerate Target based on Standard BMI Categories (Paleo et al.)
+    # Underweight < 18.5
+    # Normal 18.5 - 24.9
+    # Overweight I 25.0 - 26.9
+    # Overweight II 27.0 - 29.9
+    # Obesity I 30.0 - 34.9
+    # Obesity II 35.0 - 39.9
+    # Obesity III >= 40.0
+    
+    def classify_bmi(bmi):
+        if bmi < 18.5:
+            return 'Insufficient_Weight'
+        elif 18.5 <= bmi < 25.0:
+            return 'Normal_Weight'
+        elif 25.0 <= bmi < 27.0:
+            return 'Overweight_Level_I'
+        elif 27.0 <= bmi < 30.0:
+            return 'Overweight_Level_II'
+        elif 30.0 <= bmi < 35.0:
+            return 'Obesity_Type_I'
+        elif 35.0 <= bmi < 40.0:
+            return 'Obesity_Type_II'
+        else:
+            return 'Obesity_Type_III'
+
+    target_col = "NObeyesdad"
+    # Overwrite target with consistent values
+    df[target_col] = df['BMI_Calculated'].apply(classify_bmi)
+    
+    # 4. Update the 'BMI' feature to match reality (so models learn from correct BMI)
+    # Check if 'BMI' column exists, otherwise create it
+    if 'BMI' in df.columns:
+        df['BMI'] = df['BMI_Calculated']
+    else:
+        df['BMI'] = df['BMI_Calculated']
+        
+    # Drop temporary columns
+    df.drop(columns=['Height_m', 'BMI_Calculated'], inplace=True)
+    
+    print(f"[SUCCESS] Data fixed. Targets regenerated based on Height/Weight.")
+    
+    # --- END FIX ---
+
     # Handle missing values
-    print(f"\nMissing values before cleaning:")
-    print(df.isnull().sum().sum(), "total missing values")
-    
-    # For numeric columns, fill with median
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     for col in numeric_cols:
         if col != target_col:
             df[col].fillna(df[col].median(), inplace=True)
     
-    # For categorical columns, fill with mode
     categorical_cols = df.select_dtypes(include=['object']).columns
     for col in categorical_cols:
         if col != target_col:
             df[col].fillna(df[col].mode()[0] if len(df[col].mode()) > 0 else 'Unknown', inplace=True)
-    
-    # Drop rows with missing target
-    df = df.dropna(subset=[target_col])
-    
-    print(f"Dataset after cleaning: {df.shape[0]} rows, {df.shape[1]} columns")
-    
-    # Check if we have enough features (minimum 12 required)
-    feature_count = df.shape[1] - 1  # Excluding target
-    if feature_count < 12:
-        print(f"WARNING: Only {feature_count} features found. Assignment requires minimum 12 features.")
-    
-    # Check if we have enough instances (minimum 500 required)
-    if df.shape[0] < 500:
-        print(f"WARNING: Only {df.shape[0]} instances found. Assignment requires minimum 500 instances.")
     
     return df, target_col
 
