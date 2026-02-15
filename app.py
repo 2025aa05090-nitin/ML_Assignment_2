@@ -200,7 +200,7 @@ with col_left:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
     )
-    st.plotly_chart(fig_cm, use_container_width=True)
+    st.plotly_chart(fig_cm, use_container_width=True, theme=None)
 
 with col_right:
     # If file uploaded, show predictions here. Else show Comparison
@@ -275,5 +275,5 @@ with col_right:
             yaxis=dict(showgrid=False),
             coloraxis_showscale=False,
         )
-        st.plotly_chart(fig_comp, use_container_width=True)
+        st.plotly_chart(fig_comp, use_container_width=True, theme=None)
 
