@@ -4,6 +4,7 @@ Train all 6 classification models on Obesity Risk Classification dataset
 """
 
 import json
+import pickle
 from pathlib import Path
 
 import joblib
@@ -326,7 +327,8 @@ def main():
         
         # Save model
         model_path = MODEL_DIR / f"{name.replace(' ', '_').lower()}.pkl"
-        joblib.dump(pipeline, model_path)
+        with open(model_path, 'wb') as f:
+            pickle.dump(pipeline, f)
         print(f"  Model saved: {model_path}")
         print()
     

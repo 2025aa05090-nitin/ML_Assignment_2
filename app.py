@@ -1,4 +1,5 @@
 import json
+import pickle
 from pathlib import Path
 
 import joblib
@@ -217,7 +218,8 @@ with col_right:
 
             model_path = MODEL_DIR / f"{selected_model.replace(' ', '_').lower()}.pkl"
             if model_path.exists():
-                model = joblib.load(model_path)
+                with open(model_path, "rb") as f:
+                    model = pickle.load(f)
                 preds = model.predict(input_df)
 
                 output = input_df.copy()
